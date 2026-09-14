@@ -14,33 +14,147 @@ API_KEY = st.secrets["GEMINI_API_KEY"]
 
 # ---------------- STYLING ----------------
 st.markdown("""
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+    color: #1B2A41;
+}
 .stApp {
-    background: linear-gradient(135deg, #eef3f8 0%, #dce8f5 50%, #cfe0f2 100%);
+    background: linear-gradient(180deg, #f3f6fb 0%, #e6edf7 45%, #d9e4f3 100%);
 }
-[data-testid="stChatMessage"] {
-    border-radius: 14px;
-    padding: 10px 14px;
-    margin-bottom: 8px;
-}
-.stChatMessage:has(> div[data-testid="stChatMessageAvatarUser"]) {
-    background-color: #e3edf7;
+p, span, label, div, li {
+    color: #1B2A41;
 }
 h1, h2, h3 {
-    color: #2c4661;
+    font-family: 'Fraunces', serif;
+    color: #16223A;
+    font-weight: 600;
+    letter-spacing: -0.01em;
 }
-.stButton>button {
-    background: linear-gradient(90deg, #6fa3d8, #4c7fb3);
-    color: white;
+.stCaption, [data-testid="stCaptionContainer"] {
+    color: #445269 !important;
+    font-size: 0.92rem;
+}
+[data-testid="stChatMessage"] {
+    background-color: #ffffff;
+    border: 1px solid #E4EAF3;
+    border-radius: 16px;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    box-shadow: 0 3px 12px rgba(40, 70, 110, 0.06);
+    color: #1B2A41;
+}
+[data-testid="stChatMessage"] p {
+    color: #1B2A41;
+    line-height: 1.55;
+}
+.stChatMessage:has(> div[data-testid="stChatMessageAvatarUser"]) {
+    background-color: #EEF3FB;
+    border-color: #DCE6F5;
+}
+[data-testid="stChatInput"] > div {
+    background: #ffffff;
+    border: 1px solid #DCE6F5;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(40, 70, 110, 0.07);
+}
+[data-testid="stChatInput"] textarea {
+    color: #1B2A41 !important;
+}
+.stButton>button, [data-testid="stChatInput"] button {
+    background: linear-gradient(135deg, #3E5C8A, #2C4165);
+    color: #ffffff;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
+    font-weight: 500;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.stButton>button:hover, [data-testid="stChatInput"] button:hover {
+    box-shadow: 0 4px 14px rgba(44, 65, 101, 0.28);
+    transform: translateY(-1px);
+}
+ 
+/* ---- Background decoration: faded watermark + floating equipment ---- */
+[data-testid="stAppViewContainer"], [data-testid="stMain"] {
+    position: relative;
+    z-index: 1;
+}
+.bg-decor {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+.bg-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-6deg);
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 13vw;
+    color: #2C4165;
+    opacity: 0.05;
+    white-space: nowrap;
+}
+.float-icon {
+    position: absolute;
+    color: #3E5C8A;
+    opacity: 0.16;
+    animation: floaty 7s ease-in-out infinite;
+}
+@keyframes floaty {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-18px) rotate(4deg); }
 }
 </style>
 """, unsafe_allow_html=True)
-
+ 
+# Floating hospital-equipment icons + a large faded "MED AI" watermark,
+# all fixed to the viewport behind the actual chat content (z-index 0
+# vs the content's z-index 1), non-interactive (pointer-events: none)
+# so they never block clicks.
+st.html("""
+<div class="bg-decor">
+    <div class="bg-watermark">MED AI</div>
+ 
+    <svg class="float-icon" style="top:8%; left:6%; animation-delay:0s;" width="70" height="70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+        <path d="M4 3v7a5 5 0 0 0 5 5v0a5 5 0 0 0 5-5V3"/>
+        <circle cx="18" cy="16" r="3"/>
+        <path d="M14 15v-2"/>
+    </svg>
+ 
+    <svg class="float-icon" style="top:18%; left:85%; animation-delay:1.2s;" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+        <rect x="3" y="3" width="18" height="18" rx="3"/>
+        <path d="M12 8v8M8 12h8"/>
+    </svg>
+ 
+    <svg class="float-icon" style="top:70%; left:4%; animation-delay:2.4s;" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+        <rect x="6" y="2" width="4" height="8" rx="1"/>
+        <path d="M8 10v10a2 2 0 0 0 4 0V10"/>
+    </svg>
+ 
+    <svg class="float-icon" style="top:80%; left:80%; animation-delay:0.6s;" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+        <rect x="4" y="9" width="9" height="6" rx="1.5"/>
+        <path d="M13 12h3l2-2v4l-2-2"/>
+    </svg>
+ 
+    <svg class="float-icon" style="top:42%; left:92%; animation-delay:1.8s;" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+        <path d="M2 12h4l2-6 4 12 3-9 2 3h5"/>
+    </svg>
+ 
+    <svg class="float-icon" style="top:52%; left:2%; animation-delay:3s;" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+        <rect x="10" y="3" width="4" height="14" rx="2"/>
+        <circle cx="12" cy="19" r="2.5"/>
+    </svg>
+</div>
+""")
+ 
 st.title("🩺 MediAI")
 st.caption("AI-powered health information & clinical decision-support assistant")
-
+ 
 # ---------------- LOAD KB ----------------
 @st.cache_data
 def load_kb():
